@@ -21,15 +21,16 @@ fi
 
 
 # Rocket Pool settings
-rp_repo_url="git@ssh.dev.azure.com:v3/rocket-pool/RocketPool/rocketpool"
-rp_repo_branch="v1.1"
+rp_repo_url="git@github.com:rocket-pool/rocketpool.git" # "git@ssh.dev.azure.com:v3/rocket-pool/RocketPool/rocketpool"
+rp_repo_branch="v1.0.0-rc2" # "v1.1"
 
 # Dependencies
 rp_dependencies=(
     "@openzeppelin/contracts@3.3.0"
     "babel-polyfill@6.26.0"
     "babel-register@6.26.0"
-    "ganache-cli@6.12.2"
+    # "ganache-cli@6.12.2"
+    "ganache@7.4.1"
     "pako@1.0.11"
     "truffle@5.1.66"
     "truffle-contract@4.0.31"
@@ -66,7 +67,7 @@ cleanup() {
 
 # Clone Rocket Pool repo
 clone_rp() {
-    rp_tmp_path="$(mktemp -d)"
+    rp_tmp_path="./tmp" #"$(mktemp -d)"
     rp_path="$rp_tmp_path/rocketpool"
     git clone "$rp_repo_url" -b "$rp_repo_branch" "$rp_path"
 }
@@ -82,7 +83,7 @@ install_rp_deps() {
 # Start ganache-cli instance
 start_ganache() {
     cd "$rp_path"
-    node_modules/.bin/ganache-cli -e "$ganache_eth_balance" -l "$ganache_gas_limit" -m "$ganache_mnemonic" -p "$ganache_port" > /dev/null &
+    node_modules/.bin/ganache -e "$ganache_eth_balance" -l "$ganache_gas_limit" -m "$ganache_mnemonic" -p "$ganache_port" > /dev/null &
     ganache_pid=$!
     cd - > /dev/null
 }
@@ -90,7 +91,7 @@ start_ganache() {
 # Migrate Rocket Pool contracts
 migrate_rp() {
     cd "$rp_path"
-    node_modules/.bin/truffle migrate --network localhost
+    node_modules/.bin/truffle migrate --network development
     cd - > /dev/null
 }
 
@@ -107,7 +108,7 @@ run_tests() {
 
 
 # Clean up before exiting
-trap cleanup EXIT
+# trap cleanup EXIT
 
 # Clone RP repo
 echo ""

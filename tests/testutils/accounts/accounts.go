@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -43,7 +44,7 @@ func GetAccount(index uint8) (*Account, error) {
 
 // Get a transactor for an account
 func (a *Account) GetTransactor() *bind.TransactOpts {
-	opts := bind.NewKeyedTransactor(a.PrivateKey)
+	opts, _ := bind.NewKeyedTransactorWithChainID(a.PrivateKey, big.NewInt(tests.ChainId))
 	opts.Context = context.Background()
 	return opts
 }

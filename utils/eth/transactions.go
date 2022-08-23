@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
@@ -43,6 +44,7 @@ func EstimateSendTransactionGas(client rocketpool.ExecutionClient, toAddress com
 func SendTransaction(client rocketpool.ExecutionClient, toAddress common.Address, chainID *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
 	var err error
 
+	fmt.Println("getting nonce")
 	// Get from address nonce
 	var nonce uint64
 	if opts.Nonce == nil {
@@ -60,6 +62,7 @@ func SendTransaction(client rocketpool.ExecutionClient, toAddress common.Address
 		value = big.NewInt(0)
 	}
 
+	fmt.Println("estimating")
 	// Estimate gas limit
 	gasLimit := opts.GasLimit
 	if gasLimit == 0 {
@@ -87,14 +90,17 @@ func SendTransaction(client rocketpool.ExecutionClient, toAddress common.Address
 		AccessList: []types.AccessTuple{},
 	})
 
+	fmt.Println("signing")
 	// Sign transaction
 	signedTx, err := opts.Signer(opts.From, tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
+	fmt.Println("sending")
 	// Send transaction
 	if err = client.SendTransaction(context.Background(), signedTx); err != nil {
+		fmt.Println(err)
 		return common.Hash{}, err
 	}
 
