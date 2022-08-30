@@ -22,7 +22,7 @@ fi
 
 # Rocket Pool settings
 rp_repo_url="git@github.com:rocket-pool/rocketpool.git" # "git@ssh.dev.azure.com:v3/rocket-pool/RocketPool/rocketpool"
-rp_repo_branch="v1.1" #"v1.0.0-rc2" # "v1.1"
+rp_repo_branch="master" # "v1.1" #"v1.0.0-rc2" # "v1.1"
 
 # Dependencies
 rp_dependencies=(

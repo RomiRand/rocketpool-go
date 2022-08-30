@@ -181,8 +181,8 @@ func GetQueueNextCapacity(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.
 	return *capacity, nil
 }
 
-// Get a minipools position in queue
-func GetMinipoolPositionInQueue(opts *bind.CallOpts, mp *Minipool) (uint64, error) {
+// Get a minipools position in queue. -1 means it is currently not queued
+func GetMinipoolPositionInQueue(mp *Minipool, opts *bind.CallOpts) (int64, error) {
 	depositType, err := mp.GetDepositType(opts)
 	if err != nil {
 		return 0, fmt.Errorf("Could not get deposit type: %w", err)
@@ -191,7 +191,7 @@ func GetMinipoolPositionInQueue(opts *bind.CallOpts, mp *Minipool) (uint64, erro
 		return 0, fmt.Errorf("Minipool address %s has no deposit type", mp.Address)
 	}
 
-	queryIndex := func(key string) (uint64, error) {
+	queryIndex := func(key string) (int64, error) {
 		return storage.GetAddressQueueIndexOf(mp.RocketPool, opts, crypto.Keccak256Hash([]byte(key)), mp.Address)
 	}
 
@@ -219,7 +219,7 @@ func GetMinipoolPositionInQueue(opts *bind.CallOpts, mp *Minipool) (uint64, erro
 		if err != nil {
 			return 0, err
 		}
-		return position + index, nil
+		return int64(position) + index, nil
 	}
 
 	// must be empty type now
@@ -227,7 +227,7 @@ func GetMinipoolPositionInQueue(opts *bind.CallOpts, mp *Minipool) (uint64, erro
 	if err != nil {
 		return 0, err
 	}
-	return position + index, nil
+	return int64(position) + index, nil
 }
 
 // Get contracts

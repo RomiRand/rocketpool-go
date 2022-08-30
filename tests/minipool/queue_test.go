@@ -3,6 +3,7 @@ package minipool
 import (
 	"testing"
 
+	"github.com/rocket-pool/rocketpool-go/deposit"
 	trustednodesettings "github.com/rocket-pool/rocketpool-go/settings/trustednode"
 
 	"github.com/rocket-pool/rocketpool-go/minipool"
@@ -226,4 +227,88 @@ func TestQueueCapacity(t *testing.T) {
 		}
 	}
 
+}
+
+func TestQueuePosition(t *testing.T) {
+	// State snapshotting
+	if err := evm.TakeSnapshot(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := evm.RevertSnapshot(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	// Register nodes
+	if _, err := node.RegisterNode(rp, "Australia/Brisbane", nodeAccount.GetTransactor()); err != nil {
+		t.Fatal(err)
+	}
+	if err := nodeutils.RegisterTrustedNode(rp, ownerAccount, trustedNodeAccount); err != nil {
+		t.Fatal(err)
+	}
+
+	// Disable min commission rate for unbonded pools
+	if _, err := trustednodesettings.BootstrapMinipoolUnbondedMinFee(rp, uint64(0), ownerAccount.GetTransactor()); err != nil {
+		t.Fatal(err)
+	}
+
+	mp_full, err := minipoolutils.CreateMinipool(t, rp, ownerAccount, nodeAccount, eth.EthToWei(32), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if pos, err := minipool.GetMinipoolPositionInQueue(nil, mp_full); err != nil {
+		t.Fatal(err)
+	} else {
+		if pos != 0 {
+			t.Errorf("Incorrect queue position: %d", pos)
+		}
+	}
+
+	mp_half, err := minipoolutils.CreateMinipool(t, rp, ownerAccount, nodeAccount, eth.EthToWei(16), 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if pos, err := minipool.GetMinipoolPositionInQueue(nil, mp_half); err != nil {
+		t.Fatal(err)
+	} else {
+		if pos != 0 {
+			t.Errorf("Incorrect queue position: %d", pos)
+		}
+	}
+
+	if pos, err := minipool.GetMinipoolPositionInQueue(nil, mp_full); err != nil {
+		t.Fatal(err)
+	} else {
+		if pos != 1 {
+			t.Errorf("Incorrect queue position: %d", pos)
+		}
+	}
+
+	_, err = minipoolutils.CreateMinipool(t, rp, ownerAccount, nodeAccount, eth.EthToWei(16), 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// first pool should still be first
+	if pos, err := minipool.GetMinipoolPositionInQueue(nil, mp_half); err != nil {
+		t.Fatal(err)
+	} else {
+		if pos != 0 {
+			t.Errorf("Incorrect queue position: %d", pos)
+		}
+	}
+	
+	// check if minipool is removed after deposit
+	opts := userAccount.GetTransactor()
+	opts.Value = eth.EthToWei(16)
+	if _, err := deposit.Deposit(rp, opts); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := minipool.GetMinipoolPositionInQueue(nil, mp_half); err == nil {
+		t.Fatal(err)
+	}
 }

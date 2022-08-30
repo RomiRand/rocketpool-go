@@ -38,17 +38,20 @@ func GetAddressQueueItem(rp *rocketpool.RocketPool, opts *bind.CallOpts, key [32
 	return *address, nil
 }
 
-// Return index of the input address for the given key
-func GetAddressQueueIndexOf(rp *rocketpool.RocketPool, opts *bind.CallOpts, key [32]byte, address common.Address) (uint64, error) {
+// Return index of the input address for the given key. -1 if not present.
+func GetAddressQueueIndexOf(rp *rocketpool.RocketPool, opts *bind.CallOpts, key [32]byte, address common.Address) (int64, error) {
 	addressQueueStorage, err := getAddressQueueStorage(rp)
 	if err != nil {
 		return 0, err
 	}
 	index := new(*big.Int)
 	if err := addressQueueStorage.Call(opts, index, "getIndexOf", key, address); err != nil {
-		return 0, fmt.Errorf("Could not get index for address %s for key %s: %w", address.String(), key, err)
+		return 0, fmt.Errorf("Could not get index for address %s: %w", address.String(), err)
 	}
-	return (*index).Uint64(), nil
+	if (*index).Sign() == -1 {
+		return 0, fmt.Errorf("Could not find address %s", address.String())
+	}
+	return (*index).Int64(), nil
 }
 
 // Get contracts
