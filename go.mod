@@ -1,4 +1,4 @@
-module github.com/rocket-pool/rocketpool-go
+module github.com/RomiRand/rocketpool-go
 
 go 1.13
 
