@@ -95,6 +95,19 @@ func BootstrapMaximumDepositAssignments(rp *rocketpool.RocketPool, value uint64,
 	return protocoldao.BootstrapUint(rp, DepositSettingsContractName, "deposit.assign.maximum", big.NewInt(int64(value)), opts)
 }
 
+// Deposit fee
+func GetDepositFee(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
+	depositSettingsContract, err := getDepositSettingsContract(rp)
+	if err != nil {
+		return nil, err
+	}
+	value := new(*big.Int)
+	if err := depositSettingsContract.Call(opts, value, "getDepositFee"); err != nil {
+		return nil, fmt.Errorf("Could not get maximum deposit pool size: %w", err)
+	}
+	return *value, nil
+}
+
 // Get contracts
 var depositSettingsContractLock sync.Mutex
 
